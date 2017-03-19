@@ -1,10 +1,9 @@
-# goalie-carey
-A statistical look at Mr. Saturday Night, Carey Price.
+# goalie-carey: A statistical look at Mr. Saturday Night, Carey Price.
 
 This is the code used to scrape, manipulate, plot and present NHL goaltender Carey Price's carreer
 statistics to investigate whether he really does win more often on Saturday nights.
 
-Data is scraped from www.hockreference.com using RSelenium. The R code to accomplish this is found in `scrape_data.R`.
+Data is scraped from www.hockeyreference.com using RSelenium. The R code to accomplish this is found in `scrape_data.R`.
 This script pulls the data and stores it in the object `data_storage/raw_tables.rds`. For convenience, the results
 of this scrape as of March 19, 2017 are already in this repo at the same file path.
 
