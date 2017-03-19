@@ -1,6 +1,7 @@
 library(RSelenium)
 library(rvest)
 library(data.table)
+library(XML)
 
 baseURL <- "http://www.hockey-reference.com/players/p/priceca01/gamelog/"
 years <- 2008:2017
@@ -33,4 +34,4 @@ raw_tables_season[, playoffs := FALSE]
 raw_table_playoffs[, playoffs := TRUE]
 
 raw_tables <- rbind(raw_tables_season, raw_table_playoffs)
-saveRDS(raw_tables, file = "raw_tables.rds")
+saveRDS(raw_tables, file = "data_storage/raw_tables.rds")

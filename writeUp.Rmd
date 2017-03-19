@@ -15,11 +15,11 @@ library(gridExtra)
 
 source("process_data.R")
 
-games <- readRDS("games.rds")
-gamesByDay <- readRDS("gamesByDay.rds")
-meltedGames <- readRDS("meltedGames.rds")
-gamesBySat <- readRDS("gamesBySat.rds")
-meltedGames2 <- readRDS("meltedGamesBySat.rds")
+games <- readRDS("data_storage/games.rds")
+gamesByDay <- readRDS("data_storage/gamesByDay.rds")
+meltedGames <- readRDS("data_storage/meltedGames.rds")
+gamesBySat <- readRDS("data_storage/gamesBySat.rds")
+meltedGames2 <- readRDS("data_storage/meltedGamesBySat.rds")
 
 
 wloColourScale <- scale_fill_manual(values = c("#F8766D", "#619CFF", "#00BA38"))
@@ -27,20 +27,22 @@ wloColourScale <- scale_fill_manual(values = c("#F8766D", "#619CFF", "#00BA38"))
 
 ## Background
 
-There is a strongly-held belief among Montreal Canadiens fans that the club's starting goaltender
-Carey Price (aka *goalie carey*) plays exceptionally well on Saturday nights. I mean exceptionally
-well, even compared to his usual exceptionally-good play. See here a traditional reddit ritual the
-day after a Saturday night win:
+Many Montreal Canadiens fans have noticed that the club's starting goaltender Carey Price plays
+exceptionally well on Saturday nights. I mean exceptionally well, even compared to his usual
+exceptionally-good play. See here an image often posted on the Habs subreddit the day after 
+a Saturday night win:
 
 ```{r, out.width = "400px"}
 knitr::include_graphics("thx.png")
 ```
 
-While I have never doubted this, I was curious about how big the "Saturday night effect" really is.
-It's surprisingly hard to find NHL statistics broken down by day-of-the-week, so I did a little bit
-of scraping and analysis.
+I was curious about how big the "Saturday night effect" really is. It's hard to find NHL statistics
+broken down by day-of-the-week, so I did a little bit of web scraping and analysis.
 
-## The Basics
+I also look the opportunity to give a simple but somewhat accurate explaination of classical statistical
+hypothesis testing.
+
+## Basics
 
 Including playoffs, Price has played in `r nrow(games)` total NHL games. He was awarded a decision 
 (credited with either a win, loss or overtime loss) in `r games[, sum(GwD)]` of those games. His record is
@@ -75,9 +77,9 @@ Compare this to his season record on all of the other nights:
 On the other nights of the week, Carey wins `r round(games[playoffs == F & Day != "Sat", sum(W)/sum(GwD)]*100, 1)`%
 of his games.
 
-## Some Pretty Pictures
+## Pretty pictures
 
-Wow, that seems like a pretty big difference. Here it is graphically:
+That seems like a pretty big difference. Here it is graphically:
 
 ```{r}
 ggplot(meltedGames2[playoffs == F], aes(isSat, `%`*100, fill = Result)) +
@@ -91,9 +93,9 @@ ggplot(meltedGames2[playoffs == F], aes(isSat, `%`*100, fill = Result)) +
     wloColourScale
 ```
 
-But just from those number we can't tell the whole story: do other days stand out? Are Saturdays good
-or is some non-Saturday day just really bad? Here are Carey's percentage wins, losses and overtime
-losses for each day of the week:
+Just from those numbers we can't tell the whole story: do other days stand out?
+Are Saturdays actually good or is some other day just really bad? Here are Carey's percentage wins,
+losses and overtime losses for each day of the week:
 
 ```{r}
 ggplot(meltedGames[playoffs == F]) +
@@ -103,13 +105,13 @@ ggplot(meltedGames[playoffs == F]) +
     ggtitle("Carey Price's Relative Record by Day of the Week")
 ```
 
-That's pretty impressive! We see that only on Tuesdays, Thursdays and Saturdays does Carey get the
-win a majority of the time. However, Saturday really is a stand out day, with a 10-point higher win
-percentage than any other night. Interestingly, Friday is Carey's worst night, and it is the only 
-night with more regulation losses than wins (Sunday and Wednesday are exactly even).
+That's pretty impressive! We see that Saturday really is a stand out day, with a 10-point higher win
+percentage than any other night. Notice that only on Tuesdays, Thursdays and Saturdays does Carey 
+come away with a win the  majority of the time. Interestingly, Friday is Carey's worst night,
+and it is the only night with more regulation losses than wins (Sunday and Wednesday are exactly even).
 
 There's one problem: by looking at percentages only we may have a skewed idea of what is going
-on. This percentage view, while optimal for comparing days of the week, sells short how much Carey
+on. This prelative view, while optimal for comparing days of the week, sells short how much Carey
 wins overall, because it does not take into account the fact that more games are played on certain
 days. So now let's look at the raw *count* of each results on each Day:
 
@@ -125,8 +127,9 @@ ggplot(meltedGames[playoffs == F], aes(Day, Count, fill = Result)) +
 ```
 
 Aha! Price wins the biggest majority of his games on the days when the most games are played.
-Furthermore, his weakest Day, Friday, is not that big of a game night. In fact, the three
-days we picked out as being Carey's best are also the days with the most games:
+Furthermore, his weakest day, Friday, is not that big of a game night. In fact, the three
+days we picked out as being Carey's best are also the days with the most games. Carey's record is
+best on the most popular game nights, making him a winning goaltender over all:
 
 ```{r}
 ggplot(gamesByDay[playoffs == F], aes(G, `W%`*100)) + geom_label(aes(label=Day)) +
@@ -134,11 +137,11 @@ ggplot(gamesByDay[playoffs == F], aes(G, `W%`*100)) + geom_label(aes(label=Day))
     ggtitle("Carey Price: Wins Most on the Nights with the Most Games")
 ```
 
-Cool. So far everything we've looked at has been record-based, which means that it includes the play
-of the Canadiens as a whole. Is it really Carey that play wells on Saturdays
-or are the Habs just better in general? Because the two are so linked, this would be a good question
-to look into in its own right, by pulling in a bunch of team stats, looking at games without Price,
-etc. For now I'm happy to just look at Price's save percentage and call it a day:
+So far everything we've looked at has been based on the outcomes of entire games. Is it really Carey
+that play wells on Saturdays or are the Habs just better in general? Because the two are so linked,
+this would be a good question to look into in its own right, by pulling in a bunch of team stats,
+looking at games without Price, etc. For now I'm happy to just look at Price's save percentage and
+call it a day:
 
 ```{r}
 careerAverageSVp <- gamesByDay[playoffs == FALSE, sum(SV)/sum(SA)]
@@ -156,21 +159,22 @@ ggplot(gamesByDay[playoffs == FALSE], aes(Day, `SV%`)) + geom_point(aes(size = G
 ```
 
 Indeed, Price's best save percentage is on Saturdays. That doesn't mean his play is solely responsible
-for the high proportion of Saturday wins, but it does indicate that Carey plays at his best on Saturdays.
+for the high proportion of Saturday wins, but it does support the idea that Carey plays at his best
+on Saturdays.
 
-## A Simple Statistical Test in Much Detail
+## A simple statistical test in detail
 
-CAUTION: I'm going to go into a lot of detail for those interested in what statistical tests really mean.
-If you don't care or already know this, the TDLR is that Carey really does win "statistically significantly"
-more on Saturdays.
+*I'm going to go into a lot of detail for those interested understanding the basics of statistical
+testings. If you don't care or already know this, the long and short is that Carey really does win
+"statistically significantly" more on Saturdays.*
 
 Looking at these plots is nice, and they show that Carey's record is better on Saturdays than the 
 other nights of the week. But we wonder whether this is just a fluke. After all, if you flipped
-coins every day of the week, some days are going to have more heads than others. This sort of question
-is where "statistical significance" comes into play. Stated very simply, the idea of statistical significance
-just involves combining the difference in win percentage with information about sample size. For 
-better or for worse, the standard approach to determining statistical significance uses "classical" statistical
-hypothesis testing.
+coins every day of the week, some days are going to have more heads than others, just due to chance.
+This sort of question is where "statistical significance" comes into play. Stated very simply, the
+idea of statistical significance just involves combining the difference in win percentage with
+information about sample size. For better or for worse, the standard approach to determining
+statistical significance uses "classical" statistical hypothesis testing.
 
 I had one specific question, that I had in my head before I saw any data:
 
@@ -189,12 +193,15 @@ and stick to it. The hypotheses we are testing are:
 Our test will either present strong enough evidence to reject the null hypothesis, or it won't. The
 evidence will come in the form of a *test statistic*, a number that summarizes information about the
 relative proportions of wins on each type of night, along with the sample sizes. The classical approach
-is pretty much: if this test statistic is big enough, we will reject $H_0$.
+is pretty much: if this test statistic is big enough, we will reject $H_0$. This means we conclude
+that Carey wins more on Saturdays. If the test statistic is not begin enough, we are stuck with our
+null hypothesis. We haven't proved that the null hypothesis is true, we've just failed to
+find any evidence that the alternative is better.
 
-We a choose statistical model for the data, which involves making some assumptions and simplifications.
+To start, we a choose statistical model for the data, which involves making some assumptions and simplifications.
 My model views each game as a *Bernoulli trial*, from one of two populations (Saturday games and non-
 Saturday games). This means that the Saturday games in our dataset are a random sample from a 
-hypothetical infinite population of Saturdays games, that all share a common probability of a win, $p_1$.
+hypothetical, infinite population of Saturday games, that all share a common probability of a win, $p_1$.
 Similarly the non-Saturday games are a sample from a population with a possibly different chance of
 winning, $p_2$. Our hypothesis test can then be stated:
 
@@ -223,16 +230,22 @@ SE <- sqrt( p*(1-p) * (1/n1 + 1/n2))
 z <- (abs(p1 - p2))/SE
 p <- 1 - pnorm(z)
 roundZ <- round(z, 3)
-
 ```
 
-where $p_1$ is the Saturday win percentage, $p_2$ is the non-Saturday win percentage, $n_1$ is the number of Saturday games, $n_2$ is the number of non-Saturday games, and $p$ is the overall win percentage. Why this statistic? See [here](https://onlinecourses.science.psu.edu/stat414/node/268).
+where $p_1$ is the Saturday win percentage, $p_2$ is the non-Saturday win percentage,
+$n_1$ is the number of Saturday games, $n_2$ is the number of non-Saturday games, and $p$ is the
+overall win percentage. Why this statistic? See [here](https://onlinecourses.science.psu.edu/stat414/node/268).
+Without getting into the math, you can see some basic facts about this statistic:
 
-For our data, $Z \approx `r roundZ`$. As I mentioned, the larger $Z$, the stronger the evidence that Carey wins more on Saturdays. From the
-test statistic, we can compute the infamous "$p$-value". The $p$ value is the probability, if the
-*null hypothesis were true*, that our test-statistic would come out to be $`r roundZ`$ or bigger. In
-plainer speak, the $p$-value is the chance that we would see Carey win at least this much more on
-Saturdays, even if the Saturday effect isn't real. Two things
+- the greater $p_1$ is compared to $p_2$, the bigger the statistic
+- the larger $n_1$ and $n_2$ are, the bigger the statistic
+
+For our data, $p_1 = `r round(p1,3)`$, $n_1 = `r n1`$, $p_2 = `r round(p2, 3)`$, and $n_2 = `r n2`$. So
+$Z \approx `r roundZ`$. As I mentioned, the larger $Z$, the stronger the evidence that Carey wins
+more on Saturdays. From the test statistic, we can compute the infamous "$p$-value". The $p$ value is
+the probability, if the *null hypothesis were true*, that our test-statistic would come out to be
+$`r roundZ`$ or bigger. In plainer speak, the $p$-value is the chance that we would see Carey win at
+least this much more on Saturdays, even if the Saturday effect isn't real. Two things
 can increase $Z$: seeing a higher difference in win percentage, or observing more games.
 
 For our data, the $p$-value is $`r round(p,6)`$, or almost exactly $0.001$. This means that the chances we saw such a big Z
@@ -304,9 +317,10 @@ by scripts on web-pages. Selenium bindings for R were provided by the `RSelenium
 was manipulated using the fantastic `data.table` package, and the plots generated with minimal fuss
 using the well known `ggplot2` package. All exploration on my end was done using these tools.
 
-This document itself was created using knitr and RMarkdown, with the code living within the document
+This document itself was created using `knitr` and `RMarkdown`, with the code living within the document
 itself. The beauty of all of this is that as the stats are updated on the web, the new plots and
-analysis can be automatically refreshed. I started this document last week, and today I was able to easily update it to include Carey's Saturday night win against Ottawa yesterday.
+analysis can be automatically refreshed. I started this document last week, and today I was able to
+easily update it to include Carey's Saturday night win against Ottawa yesterday.
 
 If you've got any thoughts on what could make this more useful, more correct or more entertaining,
 let me know. If you have any questions you want me to check out using this data, let me know. Or do 

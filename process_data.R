@@ -2,9 +2,10 @@ library(data.table)
 library(lubridate)
 library(ggplot2)
 
-games <- readRDS("raw_tables.rds")
+games <- readRDS("data_storage/raw_tables.rds")
 
 setnames(games, c("V1", "V2"), c("Home", "TeamDEC"))
+
 games <- games[Rk != "Rk"]
 games[, `:=`(Rk = NULL, Age = NULL, Tm = NULL)]
 games[, Date := ymd(Date)]
@@ -31,13 +32,12 @@ games[, GwD := W | L | OTL]
 
 games[, isSat := Day == "Sat"]
 
-#games <- games[DEC %in% c("W", "L", "OTL")]  # only keep games where carey gets decision
-
-saveRDS(games, "games.rds")
+saveRDS(games, "data_storage/games.rds")
 
 gamesByDay <- games[, .(G = .N, GwD = nrow(.SD[DEC != "N"]), W = sum(W), L = sum(L), OTL = sum(OTL),
                         SV = sum(SV), SA = sum(SA), `SV%` = sum(SV)/sum(SA)),
                     by = .(Day,playoffs)]
+
 gamesByDay[, `:=`(`W%` = sum(W)/GwD,
                   `L%` = sum(L)/GwD,
                   `OTL%` = sum(OTL)/GwD),
@@ -46,20 +46,21 @@ gamesByDay[, `:=`(`W%` = sum(W)/GwD,
 gamesBySat <- games[, .(G = .N, GwD = nrow(.SD[DEC != "N"]), W = sum(W), L = sum(L), OTL = sum(OTL),
                         SV = sum(SV), SA = sum(SA), `SV%` = sum(SV)/sum(SA)),
                     by = .(isSat,playoffs)]
+
 gamesBySat[, `:=`(`W%` = sum(W)/GwD,
                   `L%` = sum(L)/GwD,
                   `OTL%` = sum(OTL)/GwD),
            by = .(isSat,playoffs)]
 
-saveRDS(gamesByDay, "gamesByDay.rds")
-saveRDS(gamesBySat, "gamesBySat.rds")
+saveRDS(gamesByDay, "data_storage/gamesByDay.rds")
+saveRDS(gamesBySat, "data_storage/gamesBySat.rds")
 
 meltedGames <- melt(gamesByDay, id.vars = c("Day", "playoffs"), measure.vars = list(c("W", "L", "OTL"), c("W%", "L%", "OTL%")),
                     variable = "Result", value = c("Count","%"))
 levels(meltedGames$Result) <- c("W", "L", "OTL")
 
-saveRDS(meltedGames, "meltedGames.rds")
+saveRDS(meltedGames, "data_storage/meltedGames.rds")
 
 meltedGamesBySat <- melt(gamesBySat, id.vars = c("isSat", "playoffs"), measure.vars = c("W%", "L%", "OTL%"),
                          variable = "Result", value = "%")
-saveRDS(meltedGamesBySat, "meltedGamesBySat.rds")
+saveRDS(meltedGamesBySat, "data_storage/meltedGamesBySat.rds")
