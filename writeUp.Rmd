@@ -29,8 +29,8 @@ wloColourScale <- scale_fill_manual(values = c("#F8766D", "#619CFF", "#00BA38"))
 
 Many Montreal Canadiens fans have noticed that the club's starting goaltender Carey Price plays
 exceptionally well on Saturday nights. I mean exceptionally well, even compared to his usual
-exceptionally-good play. See here an image often posted on the Habs subreddit the day after 
-a Saturday night win:
+exceptionally-good play. See here an image traditionally posted by Canadiens fans after a Saturday
+night win:
 
 ```{r, out.width = "400px"}
 knitr::include_graphics("thx.png")
@@ -106,9 +106,9 @@ ggplot(meltedGames[playoffs == F]) +
 ```
 
 That's pretty impressive! We see that Saturday really is a stand out day, with a 10-point higher win
-percentage than any other night. Notice that only on Tuesdays, Thursdays and Saturdays does Carey 
-come away with a win the  majority of the time. Interestingly, Friday is Carey's worst night,
-and it is the only night with more regulation losses than wins (Sunday and Wednesday are exactly even).
+percentage than any other night. Tuesdays, Thursdays and Saturdays are Price's best nights.
+Interestingly, Friday stands out as Carey's worst night: it is the only night with more regulation
+losses than wins (Wednesday exactly even).
 
 There's one problem: by looking at percentages only we may have a skewed idea of what is going
 on. This prelative view, while optimal for comparing days of the week, sells short how much Carey
